@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchers VueJS</title>
+</head>
+
+<body>
+    <div id="app">
+        <p>
+            Faça uma pergunta do tipo sim/não:
+            <input v-model="question">
+        </p>
+        <p>{{ answer }}</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                question: '',
+                answer: 'Eu não posso responder até que você faça uma pergunta!'
+            },
+            watch: {
+                question: function (newQuestion, oldQuestion) {
+                    this.answer = 'Esperando você parar de escrever...'
+                    this.debouncedGetAnswer()
+                }
+            },
+            created: function () {
+                this.debouncedGetAnswer = _.debounce(this.getAnswer, 500)
+            },
+            methods: {
+                getAnswer: function () {
+                    if (this.question.indexOf('?') === -1) {
+                        this.answer = 'Perguntas geralmente têm uma interrogação. ;-)'
+                        return
+                    }
+                    this.answer = 'Pensando...'
+                    var vm = this
+                    axios.get('https://yesno.wtf/api')
+                        .then(function (response) {
+                            vm.answer = response.data.answer === 'yes' ? 'Sim.' :
+                                response.data.answer === 'no' ? 'Não.' : 'Talvez!'
+                        })
+                        .catch(function (error) {
+                            vm.answer = 'Erro! Não pode executar a API. ' + error
+                        })
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
